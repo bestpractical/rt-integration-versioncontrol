@@ -3,7 +3,7 @@ use inc::Module::Install;
 RTx('RT-Integration-SVN');
 license('GPLv2');
 version('0.01_01');
-build_requires('Module::Install::RTx');
+build_requires('Module::Install::RTx' => 0.08);
 author('Jesse Vincent <jesse@bestpractical.com>');
 
 &WriteAll;

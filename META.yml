@@ -5,7 +5,7 @@ author: Jesse Vincent <jesse@bestpractical.com>
 license: GPLv2
 distribution_type: module
 build_requires:
-  Module::Install::RTx: 0
+  Module::Install::RTx: 0.08
 no_index:
   directory:
     - html
