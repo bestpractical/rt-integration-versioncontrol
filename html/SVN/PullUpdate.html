@@ -54,7 +54,7 @@ foreach my $line (@msg) {
         $ticket = RT::Ticket->new($user);
         $ticket->Load($2);
     }
-    elsif ( $line =~ /^\s*RT-Status:.*(\w+)/i ) {
+    elsif ( $line =~ /^\s*RT-Status:\s*(\w+)/i ) {
         $update_status = lc($1);
     }
     elsif ( $line =~ /^\s*RT-Update:\s*(comment|correspond)/i ) {
