@@ -1,5 +1,5 @@
 <%ARGS>
-$rev => 1
+$rev
 </%ARGS>
 <%init>
 
@@ -13,6 +13,10 @@ my $LOOK = $RT::PathToSvn;
 
 my $CHANGE_URI = $REPO . "@" . $rev;
 
+unless (-f $LOOK && -x $LOOK ) {
+	die "Couldn't find your svn binary ('$LOOK')";
+}
+
 open( SVNLOOK, "$LOOK log $REPO -r $rev|" ) || die $@;
 
 my $dashes = <SVNLOOK>;
@@ -23,8 +27,9 @@ if ( $data =~ /^r(\d+)\s*\|\s*(.*?)\s*\|/ ) {
     $actor    = $2;
 
 }
-die "$rev is not $revision" unless ( $rev == $revision );
-
+unless ( $rev == $revision )  {
+die "$LOOK log $REPO -r $rev\n$rev is not $revision\n$data" ;
+}
 my @msg = <SVNLOOK>;
 $dashes = pop(@msg);
 
@@ -44,15 +49,15 @@ my $update_msg    = '';
 my $update_type   = 'comment';
 my $update_status = '';
 foreach my $line (@msg) {
-    if ( $line =~ /^RT-Ticket: (\w*?)(?:\#?)(\d*)/ ) {
-        next if ($1 && $1 !~ =/^$RT::rtname$/i);
+    if ( $line =~ /^\s*RT-Ticket: (\w*?)(?:\#?)(\d*)/ ) {
+        next if ($1 && $1 !~ /^$RT::rtname$/i);
         $ticket = RT::Ticket->new($user);
         $ticket->Load($2);
     }
-    elsif ( $line =~ /^RT-Status:.*(new|open|stalled|resolved|rejected)/i ) {
+    elsif ( $line =~ /^\s*RT-Status:.*(\w+)/i ) {
         $update_status = lc($1);
     }
-    elsif ( $line =~ /^RT-Update:\s*(comment|correspond)/i ) {
+    elsif ( $line =~ /^\s*RT-Update:\s*(comment|correspond)/i ) {
         $update_type = lc($1);
     }
     else {
@@ -61,7 +66,7 @@ foreach my $line (@msg) {
 
 }
 
-if ( $ticket->id ) {
+if ( $ticket && $ticket->id ) {
     my $refers_to = $ticket->RefersTo;
     while ( my $refer = $refers_to->Next ) {
         if ( $refer->TargetURI->URI eq $CHANGE_URI ) {
@@ -77,7 +82,7 @@ if ( $ticket->id ) {
     $update_msg  = "Subversion update $REPO\@$rev \n" . $update_msg;
     $update_type = ucfirst($update_type);
     $ticket->$update_type( Content => $update_msg );
-    if ($update_status) {
+    if ($update_status && $ticket->QueueObj->IsValidStatus($update_status)) {
         $ticket->SetStatus($update_status);
     }
 }
