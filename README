@@ -39,6 +39,10 @@ haven't seen a ticket id.  This can be useful if you use svk to move subversion
 commits between repositories and want to track commit history across multiple
 RT instances.
 
+The other recognized commands are RT-Status and RT-Update.  RT-Action
+is an alias for RT-Update, if preferred.  Commands are
+case-insensitive and may occur in any order, at any point in the
+commit message.
 
 A couple simple examples:
 

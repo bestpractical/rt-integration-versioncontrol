@@ -49,7 +49,7 @@ my $update_msg    = '';
 my $update_type   = 'comment';
 my $update_status = '';
 foreach my $line (@msg) {
-    if ( $line =~ /^\s*RT-Ticket: (\w*?)(?:\#?)(\d*)/ ) {
+    if ( $line =~ /^\s*RT-Ticket:\s*(\w*?)(?:\#?)(\d*)/ ) {
         next if ($1 && $1 !~ /^$RT::rtname$/i);
         $ticket = RT::Ticket->new($user);
         $ticket->Load($2);
@@ -57,7 +57,7 @@ foreach my $line (@msg) {
     elsif ( $line =~ /^\s*RT-Status:\s*(\w+)/i ) {
         $update_status = lc($1);
     }
-    elsif ( $line =~ /^\s*RT-Update:\s*(comment|correspond)/i ) {
+    elsif ( $line =~ /^\s*RT-(?:Update|Action):\s*(comment|correspond)/i ) {
         $update_type = lc($1);
     }
     else {
