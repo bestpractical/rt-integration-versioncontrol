@@ -48,6 +48,8 @@ my $ticket;
 my $update_msg    = '';
 my $update_type   = 'comment';
 my $update_status = '';
+my $update_owner  = '';
+my %set;
 foreach my $line (@msg) {
     if ( $line =~ /^\s*RT-Ticket:\s*(\w*?)(?:\#?)(\d*)/ ) {
         next if ($1 && $1 !~ /^$RT::rtname$/i);
@@ -59,6 +61,12 @@ foreach my $line (@msg) {
     }
     elsif ( $line =~ /^\s*RT-(?:Update|Action):\s*(comment|correspond)/i ) {
         $update_type = lc($1);
+    }
+    elsif ( $line =~ /^\s*RT-Owner:\s*(\w+)/i ) {
+	$update_owner = $1;
+    }
+    elsif ( $line =~ /^\s*RT-(\w+):\s*(\w+)/i ) {
+        $set{$1} = $2;
     }
     else {
         $update_msg .= $line;
@@ -78,12 +86,30 @@ if ( $ticket && $ticket->id ) {
         }
     }
     $ticket->AddLink( Type => 'RefersTo', Target => $CHANGE_URI );
+    $m->out( "Added link to $CHANGE_URI\n" );
 
     $update_msg  = "Subversion update $REPO\@$rev \n" . $update_msg;
     $update_type = ucfirst($update_type);
     $ticket->$update_type( Content => $update_msg );
+    $m->out( "Added commit text as $update_type\n" );
+
+    if ($update_owner) {
+	my ($status, $msg) = $ticket->SetOwner($update_owner);
+	$m->out( "Set owner to $update_owner\n" );
+	$m->out( "Failed: $msg\n" ) unless $status;
+    }
+
     if ($update_status && $ticket->QueueObj->IsValidStatus($update_status)) {
         $ticket->SetStatus($update_status);
+	$m->out( "Set status to $update_status\n" );
+    }
+
+    if (keys %set) {
+	for my $k (keys %set) {
+	    my $meth = "Set$k";
+	    $ticket->$meth($set{$k});
+	    $m->out( "Set $k to $set{$k}\n" );
+	}
     }
 }
 $m->abort();
