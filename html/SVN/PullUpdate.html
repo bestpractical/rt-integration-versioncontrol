@@ -51,7 +51,7 @@ my $update_status = '';
 my $update_owner  = '';
 my %set;
 foreach my $line (@msg) {
-    if ( $line =~ /^\s*RT-Ticket:\s*(\w*?)(?:\#?)(\d*)/ ) {
+    if ( $line =~ /^\s*RT-Ticket:\s*(\w*?)(?:\#?)(\d*)/i ) {
         next if ($1 && $1 !~ /^$RT::rtname$/i);
         $ticket = RT::Ticket->new($user);
         $ticket->Load($2);
