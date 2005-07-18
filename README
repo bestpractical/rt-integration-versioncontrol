@@ -14,6 +14,25 @@ Set($SvnRepository, 'http://svn.example.org/repository/');
 Set($SvnRepository, 'svn://svn.example.org/repository/');  
 
 
+If you do not wish to use the extension's URI-handling capabilities, 
+remove /opt/rt3/local/lib/RT/URI/svn.pm
+
+Most svn:// URIs look like
+svn://svn.example.com/path/to/repository/@1234
+
+This extension will assume that this means the Web view of the revision 
+lives at:
+http://svn.example.com/cgi-bin/index.cgi/path/to/repository/?rev=1234
+(this is where SVN::Web puts it).
+
+If you aren't using SVN::Web or if your view lives elsewhere, you need
+to add the following line to RT::SiteConfig:
+
+Set( $SvnRepositoryWebView, 'http://svn.example.com/path/to/?rev=');
+
+The correct revision number will be appended.
+
+
 You also need to add a "post-commit" hook to your svn repository
 so that it knows how to talk to RT. Basically, it does a simple
 HTTP "GET" request to tell RT to query the svn server for an update.
