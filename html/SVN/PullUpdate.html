@@ -1,7 +1,9 @@
 <%ARGS>
 $rev
+$debug => 0
 </%ARGS>
 <%init>
+$r->content_type('text/plain');
 
 unless ( $rev =~ /^(\d+)$/ ) {
     $m->out("Numeric revision needed");
@@ -28,7 +30,7 @@ if ( $data =~ /^r(\d+)\s*\|\s*(.*?)\s*\|/ ) {
 
 }
 unless ( $rev == $revision )  {
-die "$LOOK log $REPO -r $rev\n$rev is not $revision\n$data" ;
+  die "$LOOK log $REPO -r $rev\n$rev is not $revision\n$data";
 }
 my @msg = <SVNLOOK>;
 $dashes = pop(@msg);
@@ -40,6 +42,9 @@ unless ( $user->id ) {
     $user->LoadByCols( Gecos => $actor );
 }
 
+$m->out("DEBUG: Found user " . $user->Name() . " as SVN committer\n")
+    if $debug;
+
 unless ( $user->id ) {
     die "Unknown user";
 }
@@ -49,30 +54,48 @@ my $update_msg    = '';
 my $update_type   = 'comment';
 my $update_status = '';
 my $update_owner  = '';
+my $update_queue  = '';
 my %set;
 foreach my $line (@msg) {
     if ( $line =~ /^\s*RT-Ticket:\s*(\w*?)(?:\#?)(\d*)/i ) {
         next if ($1 && $1 !~ /^$RT::rtname$/i);
         $ticket = RT::Ticket->new($user);
         $ticket->Load($2);
+        $m->out("DEBUG: loaded ticket $2\n")
+            if $debug;
+    }
+    elsif ( $line =~ /^\s*RT-Queue:\s*(.+\w)\s*/i ) {
+        $update_queue = $1;
+        $m->out("DEBUG: set queue to $1\n")
+            if $debug;
     }
     elsif ( $line =~ /^\s*RT-Status:\s*(\w+)/i ) {
         $update_status = lc($1);
+        $m->out("DEBUG: set status to $1\n")
+            if $debug;
     }
     elsif ( $line =~ /^\s*RT-(?:Update|Action):\s*(comment|correspond)/i ) {
         $update_type = lc($1);
+        $m->out("DEBUG: update type is $1\n")
+            if $debug;
     }
     elsif ( $line =~ /^\s*RT-Owner:\s*(\w+)/i ) {
 	$update_owner = $1;
+        $m->out("DEBUG: set owner to $1\n")
+            if $debug;
     }
     elsif ( $line =~ /^\s*RT-(\w+):\s*(\w+)/i ) {
         $set{$1} = $2;
+        $m->out("DEBUG: set $1 to $2\n")
+            if $debug;
     }
     else {
         $update_msg .= $line;
     }
-
 }
+
+$m->out("DEBUG: update message is ...\n$update_msg\n")
+    if $debug;
 
 if ( $ticket && $ticket->id ) {
     my $refers_to = $ticket->RefersTo;
@@ -92,6 +115,12 @@ if ( $ticket && $ticket->id ) {
     $update_type = ucfirst($update_type);
     $ticket->$update_type( Content => $update_msg );
     $m->out( "Added commit text as $update_type\n" );
+
+    if ($update_queue) {
+        my ($status, $msg) = $ticket->SetQueue($update_queue);
+        $m->out( "Set queue to $update_queue\n" );
+        $m->out( "Failed: $msg\n" ) unless $status;
+    }
 
     if ($update_owner) {
 	my ($status, $msg) = $ticket->SetOwner($update_owner);
