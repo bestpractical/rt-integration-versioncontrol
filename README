@@ -1,6 +1,11 @@
 This tool allows an RT 3.x instance to integrate with a Subversion revision
 control system.
 
+To install the package in your RT instance, run the following commands:
+
+    perl Makefile.PL
+    make install
+
 To configure your subversion server to talk to an RT instance, you'll need 
 to do a bit of setup.
 
