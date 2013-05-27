@@ -1,10 +1,9 @@
 ---
-abstract: 'RT Integration-SVN Extension'
+abstract: 'RT Integration-VersionControl Extension'
 author:
-  - 'Jesse Vincent <jesse@bestpractical.com>'
+  - 'Thomas Sibley <trs@bestpractical.com>'
 build_requires:
   ExtUtils::MakeMaker: 6.36
-  Module::Install::RTx: 0.08
 configure_requires:
   ExtUtils::MakeMaker: 6.36
 distribution_type: module
@@ -14,9 +13,9 @@ license: gplv2
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
-name: RT-Integration-SVN
+name: RT-Integration-VersionControl
 no_index:
   directory:
     - html
     - inc
-version: 0.05
+version: 0.90-TRIAL
