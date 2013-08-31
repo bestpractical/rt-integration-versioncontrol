@@ -1,0 +1,54 @@
+The plan was to gut RT-Integration-SVN and make it a 4.0 compat extension which
+supports git/svn and whatever else you want via simple webhooks.  This repo is
+no more than RT-Integration-SVN converted to git and the beginnings of gutting
+it.  My rough notes for this extension are below:
+
+webhook endpoint: https://rt.cpan.org/NoAuth/hook/commit/<queue>/<token>
+
+    <queue> is informational and tied to <token>
+    <token> is a shared secret so that only allowed parties can ping the hook
+    <token> is managed by an RT web admin interface, probably on a per-queue basis
+
+Uses Github's JSON webhook payload: https://help.github.com/articles/post-receive-hooks
+
+Only require Most basic structure so non-github hooks can easily generate it:
+    {
+        commits => [
+            {
+                id      => "opaque string",
+                message => "text",
+                url     => "http or https url to link to",
+                author  => "string or...",
+                author  => {
+                    name  => "string",
+                }
+            }
+        ],
+    }
+
+Include example post-receive/commit hooks for git and svn
+
+Scans message for:
+
+    RT-Ticket: \d+
+    RT-Status: \w+
+
+
+Heuristic mode for:
+
+    [rt.cpan.org #\d+]
+    rt.cpan.org #\d+
+    bug #?\d+
+    ticket #?\d+
+
+Auto-close mode:
+
+    (Resolves|Closes) prefixed on any ticket reference?
+
+Records note on ticket like so:
+
+    <Author> mentioned this bug in commit <id> ... blah blah blah
+
+where <id> is linked if possible.
+
+Set "Fixed in" somehow when a tag is pushed?
